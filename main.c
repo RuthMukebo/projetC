@@ -9,15 +9,15 @@ typedef struct Agent{
     char pseudo[50];
     char mdp[50];
 }Agent;
-// la structure qui sert à répresenter un compte
+// la structure qui sert a representer un compte
 typedef struct Compte{
-    int id;
+    long long int id;
     int solde;
     char datecreat[50];
     int idagent;
 } Compte;
 
-// structure qui permettra à creer un client(personne)
+// structure qui permettra Ã  creer un client(personne)
 typedef struct Personne{
     int id;
     char nom[50];
@@ -27,7 +27,7 @@ typedef struct Personne{
     char pays[50];
     char numtel[50];
     char addresse[50];
-    Compte cpt;
+    long long int idCpt;
 } Personne;
 
 int authentification(Agent agent){
@@ -47,39 +47,155 @@ int authentification(Agent agent){
     return 1;
 }
 // cette fonction verifie si un compte existe
-int verifCompte(Compte cmpt){
+// int verifCompte(Compte cmpt){
+
+
+// cette fonction return le nombre de comptes crees  par jour , par un agent
+// int nombreCompte(Agent agent){
+// }
+
+long long int dernierIdCmpt(){
+    FILE *fichier = fopen("compte.txt", "r");
+    long long int valretour;
+    if(fichier == NULL){
+        printf("Erreur d'ouverture\n");
+        exit(0);
+    }
+
+    char id[50], solde[50], idagent[50];
+
+    while(1){
+        if(fscanf(fichier,"%s %s %s",id, solde, idagent) == EOF)
+            break;
+    }
+    
+    fclose(fichier);
+    valretour = atoll(id);
+    
+    return valretour;
 }
-
-// verifie si le montant entré correspond ou > au montant existant ds le solde
-int verifSuffisance(Compte cmpt, int montant){
-    if((cmpt.solde - montant) >= 5)
-        return 1;
-    return 0;
-}
-
- // cette fonction return le nombre de comptes par jour , par un agent
- int nombreCompte(Agent agent){
-
- }
 
 //permet de creer un compte bancaire
 void createCompte(Personne *pers, int idagent){
-    // creation du compte
+
+    //ouverture en mode ecriture sans ecraser les anciennes donnees
+    FILE *fichierPersonne = fopen("personne.txt", "a+");
+    FILE *fichierCompte = fopen("compte.txt", "a+");
+
+    if(fichierPersonne == NULL || fichierCompte == NULL){
+        printf("Erreur d'ouverture\n");
+        exit(0);
+    }
 
     Compte cpt;
 
-    // attribution du compte à user
-    pers->cpt = cpt;
+    cpt.id = dernierIdCmpt() + 1;
+    cpt.solde = 5;
+    cpt.idagent = idagent;
+
+    // attribution du compte au user
+    pers->idCpt = cpt.id;
+
+    //Enregistrement des de la personne et du compte
+    char idCmp[14];
+    char soldeCompte[50];
+    char idAg[50];
+
+    //conversion des entiers en chaine de caratere
+    sprintf(idAg, "%d", cpt.idagent);
+    sprintf(idCmp, "%lld", pers->idCpt);
+    sprintf(soldeCompte, "%d", cpt.solde);
+
+    //insersion des fichier
+    fprintf(fichierCompte, "%s %s %s\n", idCmp, soldeCompte, idAg);
+    fprintf(fichierPersonne, "%s %s %s %s %s %s %s %s\n", pers->nom, pers->postnom, pers->prenom, pers->datenaiss, pers->pays, pers->numtel, pers->addresse, idCmp);
+
+    fclose(fichierCompte);
+    fclose(fichierPersonne);
 }
 
-//ca permet de faire un dépot bancaire
-void depot(){
+//ca permet de faire un dÃ©pot bancaire
+void depot(char idCpt[14], int montant){
+    FILE * fichiercompte = fopen("compte.txt", "r+");
+    FILE * fichiertemp = fopen("temp.txt", "a+");
+
+    if(fichiercompte == NULL || fichiertemp == NULL){
+        printf("erreur d'ouverure\n");
+        exit(0);
+    }
+    char ligne[100];
+    char id[14];
+    char solde[100];
+    char idAg[50];
+
+    //fgets  Lire le contenu du fichier ligne par ligne
+    while (fgets(ligne, sizeof(ligne), fichiercompte)){
+        
+
+        sscanf(ligne, "%s %s %s", id, solde, idAg);
+
+        if(strcmp(idCpt, id) == 0){
+            int sold = atoi(solde);
+            montant += sold;
+
+            sprintf(solde, "%d", montant);
+
+        }
+
+        fprintf(fichiertemp, "%s %s %s\n", id, solde,idAg);  
+    }
+    
+    fclose(fichiertemp);
+    fclose(fichiercompte);
+    // supprimer l'ancien fichier et renommer le fichier temporaire
+    remove("compte.txt");
+    rename("temp.txt", "compte.txt");
 
 }
 
 // permet de faire un retrait d'argent
- void retrait(){
- }
+void retrait(char idCpt[14], int montant){
+    FILE * fichiercompte = fopen("compte.txt", "r+");
+    FILE * fichiertemp = fopen("temp.txt", "a+");
+
+    if(fichiercompte == NULL || fichiertemp == NULL){
+        printf("erreur d'ouverure\n");
+        exit(0);
+    }
+    char ligne[100];
+    char id[14];
+    char solde[100];
+    char idAg[50];
+
+    //fgets  Lire le contenu du fichier ligne par ligne
+    while (fgets(ligne, sizeof(ligne), fichiercompte)){
+        
+        sscanf(ligne, "%s %s %s", id, solde, idAg);
+
+        if(strcmp(idCpt, id) == 0){
+            int sold = atoi(solde);
+            int nvmontant;
+            nvmontant = sold - montant;
+            
+            if(nvmontant >= 5){
+                sprintf(solde, "%d", nvmontant);
+            }
+            else{
+                puts("compte insuffisant");
+                exit(0);
+            }     
+        }
+
+        fprintf(fichiertemp, "%s %s %s\n", id, solde,idAg);  
+    }
+    
+    fclose(fichiertemp);
+    fclose(fichiercompte);
+    // supprimer l'ancien fichier et renommer le fichier temporaire
+    remove("compte.txt");
+    rename("temp.txt", "compte.txt");
+
+}
 
 int main(){
     int choix;
@@ -99,6 +215,9 @@ int main(){
         printf("(4)quitter\n");
         printf("=>");
         scanf("%d", &choix);
+        
+        int montant;
+        char compte[14];
 
         while(choix != 4){
             if(choix == 1 ){
@@ -107,27 +226,55 @@ int main(){
                 // reccuperation des informations de la personne
                 printf("entrez le nom de la personne : ");
                 scanf("%s", p.nom);
-                printf("quel est votre postnom");
+                printf("quel est votre postnom : ");
                 scanf("%s", p.postnom);
-                printf("quel est votre prenom");
+                printf("quel est votre prenom : ");
                 scanf("%s", p.prenom);
-                printf("quel est votre date de naissance");
+                printf("quel est votre date de naissance : ");
                 scanf("%s", p.datenaiss);
-                printf("quel est votre addresse actuelle");
+                printf("quel est votre addresse actuelle : ");
                 scanf("%s", p.addresse);
-                printf("quel est votre pays");
+                printf("quel est votre pays : ");
                 scanf("%s", p.pays);
-                printf("quel est votre numero de telephone");
+                printf("quel est votre numero de telephone : ");
                 scanf("%s",p.numtel);
 
-
+                createCompte(&p, 1);
+                system("cls");
+                puts("***************compte cree avec succes***********");   
 
             }
             else if(choix == 2 ){
-               printf("depot");
+               
+               printf("entrez le numero de compte : ");
+               scanf("%ld", compte);
+
+               // controle de sasie
+               while(strlen(compte) != 14){
+                    printf("numero du compte invalide recommencer : ");
+                    scanf("%s", compte);
+               }
+               
+               printf("entrez le montant : ");
+               scanf("%d", &montant);
+
+               depot(compte, montant);
+
+               system("cls");
+               puts("*********** depot effectue avec succes ******************");
+
             }
             else if(choix == 3 ){
-               printf("retrait");
+               printf("entrez le numero du compte");
+               scanf("%ld", compte);
+               printf("entrez le montant : ");
+               scanf("%d", &montant);
+               retrait(compte, montant);
+
+                system("cls");
+               puts("*********** retrait effectue avec succes ******************");
+
+               
             }
 
             printf("MENU\n");
