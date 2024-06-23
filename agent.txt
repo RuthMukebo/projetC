@@ -1,8 +1,8 @@
 id  nom         mdp
-1   divine      1231
-2   miradie     1232
-3   ben         1233
-4   blandine    1234
+1   ruth        1231
+2   blandine    1232
+3   grace       1233
+4   shaggy      1234 
 5   grace       1235
 6   ruth        1236
 7   gael        1237

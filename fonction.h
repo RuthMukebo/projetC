@@ -5,7 +5,7 @@ int authentification(Agent agent){
         printf("Erreur d'ouverture\n");
         return 1;
     }
-
+// ctte fonction permet a l'agent de s'authentifier avant de commencer les operations dans la banque
     char id[50], pseudo[50], mdp[50];
 
     while(fscanf(fichier,"%s %s %s",id, pseudo, mdp) != EOF){
@@ -14,13 +14,7 @@ int authentification(Agent agent){
     }
     return 1;
 }
-// cette fonction verifie si un compte existe
-// int verifCompte(Compte cmpt){
 
-
-// cette fonction return le nombre de comptes crees  par jour , par un agent
-// int nombreCompte(Agent agent){
-// }
 
 long long int dernierIdCmpt(){
     FILE *fichier = fopen("compte.txt", "r");
@@ -145,7 +139,7 @@ void retrait(char idCpt[14], int montant){
             int nvmontant;
             nvmontant = sold - montant;
             
-            if(nvmontant >= 5){
+            if(nvmontant <= 5){
                 sprintf(solde, "%d", nvmontant);
             }
             else{
